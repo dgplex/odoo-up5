@@ -133,6 +133,53 @@ Read this before changing any project-wide convention — it explains the *why*.
 
 ---
 
+## 2026-06-13 — verify.sh: psql state detection + --test-tags isolation
+
+**Decision:** `verify.sh` detects module install state via psql and uses `-u` (update)
+when the module is already installed, `-i` (install) otherwise. It also passes
+`--test-tags /$MODULE,-chrome_headless` to run only the module's own tests, not
+its dependencies', and to exclude tests requiring Chrome headless.
+
+**Alternatives considered:**
+- Always use `-i`: is a no-op on installed modules → 0 tests, false green
+- Always use `-u`: fails if module is not yet installed (no-op in some Odoo versions)
+- No `--test-tags`: runs all dependent module tests (200+ stock tests per run, slow,
+  and unrelated failures block our module's verification)
+
+**Rationale:** The verify.sh sprint-3 run showed 0 tests because the module was already
+installed. The `--test-tags /$MODULE` filter focuses verification on our code only, making
+the feedback loop faster and the signal cleaner.
+
+**Consequence:** `chrome_headless` is the standard tag for any test requiring a live Chrome
+DevTools connection. Run Chrome-dependent tours separately. `verify.sh` exits 0 on any
+machine without Chrome, while the tour test remains in the codebase and is runnable.
+
+---
+
+## 2026-06-13 — HttpCase data isolation: registry.cursor() for tour data
+
+**Decision:** `HttpCase` tests that need data visible to `start_tour()` must create it
+using `self.registry.cursor()`, not `self.env.cr` or `setUpClass`. Tests using only
+`url_open()` (JSON-RPC) can create data via RPC calls within the test method.
+
+**Alternatives considered:**
+- `setUpClass` + `self.env.cr.commit()`: framework raises `AssertionError: Cannot commit
+  or rollback a cursor from inside a test` — explicitly forbidden
+- `setUpClass` without commit: data is in an uncommitted savepoint, invisible to the HTTP
+  thread's separate cursor → 0 records returned
+- Create via RPC (`url_open`) before `start_tour`: works for url_open tests but
+  `start_tour` uses a separate browser session that requires committed DB state
+
+**Rationale:** `self.registry.cursor()` opens a fresh, unpatched cursor. Its context
+manager commits on success and rolls back on exception. This is the only safe mechanism
+to stage committed data in a test without violating the framework's savepoint contract.
+
+**Consequence:** All `start_tour` tests follow the registry.cursor() pattern with explicit
+cleanup in a `finally` block using a second registry cursor. This is documented in
+`odoo-conventions.md` under "HttpCase data isolation".
+
+---
+
 <!-- Add new decisions above this line in the format:
 ## YYYY-MM-DD — Short title
 

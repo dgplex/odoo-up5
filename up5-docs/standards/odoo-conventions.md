@@ -128,6 +128,100 @@ access_my_model_user,my.model user,model_my_model,base.group_user,1,1,1,0
 For any change that crosses two layers (e.g. model + controller, or controller + view), a
 `HttpCase` test or documented manual smoke test is required before marking the task `passing`.
 
+### HttpCase data isolation
+
+**The problem:** `setUpClass` runs in an uncommitted savepoint. The HTTP thread that handles
+`url_open` and `start_tour` opens its own DB cursor and only sees *committed* data.
+Records created in `setUpClass` are invisible to RPC calls and tours.
+
+**Pattern A — `url_open` / JSON-RPC tests:** Create data via RPC inside the test method.
+Each `url_open` call commits on the server side, so the next call sees the new records.
+
+```python
+def test_fields_via_rpc(self):
+    self.authenticate("admin", "admin")
+    partner_id = self._rpc("res.partner", "create", args=[{"name": "Test"}])
+    result = self._rpc("res.partner", "read", args=[[partner_id], ["name"]])
+    self.assertEqual(result[0]["name"], "Test")
+```
+
+**Pattern B — `start_tour` tests:** Use `self.registry.cursor()`. The context manager
+commits on exit. The test framework only patches `self.env.cr`, not fresh cursors.
+
+```python
+def test_my_tour(self):
+    record_id = None
+    with self.registry.cursor() as cr:
+        env = self.env(cr=cr)
+        record = env["my.model"].create({...})
+        record_id = record.id
+    # cr commits here → visible to tour's DB session
+    try:
+        self.start_tour("/web", "my_tour_name", login="admin")
+    finally:
+        with self.registry.cursor() as cr:
+            self.env(cr=cr)["my.model"].browse(record_id).unlink()
+```
+
+**Never use** `self.env.cr.commit()` inside a test — the framework raises
+`AssertionError: Cannot commit or rollback a cursor from inside a test`.
+
+### JS tour conventions
+
+**Asset location:** `static/tests/tours/*.js` — never `static/src/`
+
+**Manifest declaration:**
+```python
+'assets': {
+    'web.assets_tests': [
+        'my_module/static/tests/tours/*.js',
+    ],
+},
+```
+
+**Tour registration:**
+```javascript
+import { registry } from "@web/core/registry";
+import { stepUtils } from "@web_tour/tour_utils";
+
+registry.category("web_tour.tours").add("my_tour", {
+    steps: () => [
+        ...stepUtils.goToAppSteps("stock.menu_stock_root", "Open Inventory"),
+        {
+            trigger: "button[data-menu-xmlid='my_module.my_menu']",
+            content: "Open My Menu",
+            run: "click",
+        },
+        {
+            // No run = assertion: wait for element, then advance
+            trigger: ".o_list_view .o_data_row",
+            content: "List view has at least one row",
+        },
+    ],
+});
+```
+
+**Step selector patterns:**
+| What to click | Selector |
+|---|---|
+| Top-level app menu | `button[data-menu-xmlid='module.menu_xmlid']` |
+| Dropdown menu item | `.o-dropdown-item[data-menu-xmlid='module.menu_xmlid']` |
+| Notebook tab | `.o_notebook .nav-link:contains('Tab Name')` |
+| Field in form | `.o_field_widget[name='field_name']` |
+| List row with decoration-danger | `.o_data_row.text-danger` |
+| Specific cell in row | `.o_data_row .o_data_cell[name='field_name']` |
+
+**`chrome_headless` tag:** Tours that require Chrome's DevTools Protocol must be tagged
+`@tagged("post_install", "-at_install", "chrome_headless")`. This excludes them from the
+default `verify.sh` run. Run Chrome tours explicitly:
+```bash
+conda run -n odoo19 python odoo-bin -c odoo.conf --test-enable \
+  -d odoo_dev --stop-after-init -u <module> \
+  --test-tags /<module>/chrome_headless
+```
+
+**Prerequisite:** `conda run -n odoo19 pip install websocket-client`
+
 ### Always include a failure scenario
 
 Every feature test file must include at least one test of expected failure, not only happy paths:
@@ -212,3 +306,8 @@ Violations here cause circular imports or untestable code — enforce at code re
 | Silent failure loading standalone | Missing entry in `depends` in `__manifest__.py` |
 | XML ID conflict | Not prefixed with module name — use `<module>.<id>` |
 | Race condition on unique constraint | Using only `@api.constrains` — add `_sql_constraints` |
+| `HttpCase` RPC returns 0 records | Data created in `setUpClass` is not committed — use RPC or `registry.cursor()` |
+| `AssertionError: Cannot commit … inside a test` | Used `self.env.cr.commit()` — use `self.registry.cursor()` instead |
+| `verify.sh` shows 0 tests on already-installed module | `-i` is a no-op; `verify.sh` uses psql to detect state and switches to `-u` |
+| JS tour skipped with "websocket-client not installed" | `conda run -n odoo19 pip install websocket-client` |
+| `<separator/>` or `expand=` in `<search>` view | Not valid in Odoo 19 — use plain `<group>` with no attributes |
