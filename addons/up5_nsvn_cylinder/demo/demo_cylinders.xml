@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Demo gas cylinder products -->
+    <record id="demo_prod_o2_industrial" model="product.product">
+        <field name="name">Oxygen Cylinder — Industrial (40L)</field>
+        <field name="type">consu</field>
+        <field name="tracking">serial</field>
+        <field name="is_cylinder">True</field>
+        <field name="gas_type">o2_industrial</field>
+    </record>
+
+    <record id="demo_prod_o2_medical" model="product.product">
+        <field name="name">Oxygen Cylinder — Medical (10L)</field>
+        <field name="type">consu</field>
+        <field name="tracking">serial</field>
+        <field name="is_cylinder">True</field>
+        <field name="gas_type">o2_medical</field>
+    </record>
+
+    <record id="demo_prod_n2" model="product.product">
+        <field name="name">Nitrogen Cylinder (50L)</field>
+        <field name="type">consu</field>
+        <field name="tracking">serial</field>
+        <field name="is_cylinder">True</field>
+        <field name="gas_type">n2</field>
+    </record>
+
+    <!-- Demo customer -->
+    <record id="demo_partner_hospital" model="res.partner">
+        <field name="name">Demo — Cho Ray Hospital</field>
+        <field name="is_company">True</field>
+    </record>
+
+    <record id="demo_partner_factory" model="res.partner">
+        <field name="name">Demo — Bien Hoa Industrial Zone</field>
+        <field name="is_company">True</field>
+    </record>
+
+    <!-- Demo cylinders: available -->
+    <record id="demo_lot_cyl001" model="stock.lot">
+        <field name="name">NSVN-CYL-0001</field>
+        <field name="product_id" ref="demo_prod_o2_industrial"/>
+        <field name="cylinder_capacity">40.0</field>
+        <field name="cylinder_pressure_rating">200.0</field>
+        <field name="cylinder_manufacture_year">2020</field>
+        <field name="cylinder_state">available</field>
+        <field name="rental_days">30</field>
+    </record>
+
+    <!-- At customer — not overdue (dispatched 15 days ago, 30-day rental) -->
+    <record id="demo_lot_cyl002" model="stock.lot">
+        <field name="name">NSVN-CYL-0002</field>
+        <field name="product_id" ref="demo_prod_o2_medical"/>
+        <field name="cylinder_capacity">10.0</field>
+        <field name="cylinder_pressure_rating">150.0</field>
+        <field name="cylinder_manufacture_year">2021</field>
+        <field name="cylinder_state">at_customer</field>
+        <field name="customer_id" ref="demo_partner_hospital"/>
+        <field name="dispatch_date" eval="(DateTime.now() - timedelta(days=15)).strftime('%Y-%m-%d')"/>
+        <field name="rental_days">30</field>
+    </record>
+
+    <!-- At customer — overdue (dispatched 45 days ago, 30-day rental → 15 days overdue) -->
+    <record id="demo_lot_cyl003" model="stock.lot">
+        <field name="name">NSVN-CYL-0003</field>
+        <field name="product_id" ref="demo_prod_n2"/>
+        <field name="cylinder_capacity">50.0</field>
+        <field name="cylinder_pressure_rating">200.0</field>
+        <field name="cylinder_manufacture_year">2019</field>
+        <field name="cylinder_state">at_customer</field>
+        <field name="customer_id" ref="demo_partner_factory"/>
+        <field name="dispatch_date" eval="(DateTime.now() - timedelta(days=45)).strftime('%Y-%m-%d')"/>
+        <field name="rental_days">30</field>
+    </record>
+
+    <!-- Under maintenance -->
+    <record id="demo_lot_cyl004" model="stock.lot">
+        <field name="name">NSVN-CYL-0004</field>
+        <field name="product_id" ref="demo_prod_o2_industrial"/>
+        <field name="cylinder_capacity">40.0</field>
+        <field name="cylinder_pressure_rating">200.0</field>
+        <field name="cylinder_manufacture_year">2018</field>
+        <field name="cylinder_next_inspection" eval="(DateTime.now() + timedelta(days=30)).strftime('%Y-%m-%d')"/>
+        <field name="cylinder_state">maintenance</field>
+        <field name="rental_days">30</field>
+    </record>
+</odoo>

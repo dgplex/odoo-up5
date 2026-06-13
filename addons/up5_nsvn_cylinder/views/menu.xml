@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Top-level Cylinders menu under Inventory -->
+    <menuitem
+        id="up5_nsvn_cylinder_menu_root"
+        name="Cylinders"
+        parent="stock.menu_stock_root"
+        sequence="50"
+    />
+    <menuitem
+        id="up5_nsvn_cylinder_menu_all"
+        name="All Cylinders"
+        parent="up5_nsvn_cylinder_menu_root"
+        action="up5_nsvn_cylinder_lot_action"
+        sequence="10"
+    />
+    <menuitem
+        id="up5_nsvn_cylinder_menu_overdue"
+        name="Overdue Cylinders"
+        parent="up5_nsvn_cylinder_menu_root"
+        action="up5_nsvn_cylinder_overdue_action"
+        sequence="20"
+    />
+</odoo>

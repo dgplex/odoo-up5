@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend stock.lot form: add Cylinder tab after main_group -->
+    <record id="up5_nsvn_cylinder_lot_form" model="ir.ui.view">
+        <field name="name">up5_nsvn_cylinder.stock.lot.form.inherit</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='main_group']" position="after">
+                <notebook>
+                    <page string="Cylinder" name="cylinder_page">
+                        <group>
+                            <group string="Physical Specifications">
+                                <field name="cylinder_capacity"/>
+                                <field name="cylinder_pressure_rating"/>
+                                <field name="cylinder_manufacture_year"/>
+                                <field name="cylinder_next_inspection"/>
+                            </group>
+                            <group string="Customer Tracking">
+                                <field name="cylinder_state"/>
+                                <field name="customer_id"/>
+                                <field name="dispatch_date"/>
+                                <field name="rental_days"/>
+                            </group>
+                        </group>
+                        <group invisible="not customer_id">
+                            <group string="Overdue Status">
+                                <field name="expected_return_date"/>
+                                <field name="days_at_customer"/>
+                                <field name="is_overdue"/>
+                                <field name="overdue_days" invisible="not is_overdue"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Dedicated list view for Cylinders menu — overdue rows highlighted red -->
+    <record id="up5_nsvn_cylinder_lot_list" model="ir.ui.view">
+        <field name="name">up5_nsvn_cylinder.stock.lot.list</field>
+        <field name="model">stock.lot</field>
+        <field name="arch" type="xml">
+            <list
+                decoration-danger="is_overdue"
+                decoration-warning="not is_overdue and days_at_customer &gt; 25"
+                default_order="is_overdue desc, overdue_days desc"
+            >
+                <field name="name" string="Cylinder No." decoration-bf="1"/>
+                <field name="product_id" optional="show"/>
+                <field name="cylinder_state" optional="show"/>
+                <field name="customer_id"/>
+                <field name="dispatch_date" optional="show"/>
+                <field name="expected_return_date" optional="show"/>
+                <field name="days_at_customer" string="Days Out"/>
+                <field name="is_overdue" optional="hide"/>
+                <field name="overdue_days" string="Days Overdue"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search view with Overdue and At-Customer filters -->
+    <record id="up5_nsvn_cylinder_lot_search" model="ir.ui.view">
+        <field name="name">up5_nsvn_cylinder.stock.lot.search</field>
+        <field name="model">stock.lot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Cylinder No."/>
+                <field name="customer_id"/>
+                <field name="product_id"/>
+                <filter name="overdue" string="Overdue" domain="[('is_overdue', '=', True)]"/>
+                <filter name="at_customer" string="At Customer" domain="[('cylinder_state', '=', 'at_customer')]"/>
+                <filter name="available" string="Available" domain="[('cylinder_state', '=', 'available')]"/>
+                <group>
+                    <filter name="group_customer" string="Customer" domain="[]" context="{'group_by': 'customer_id'}"/>
+                    <filter name="group_state" string="State" domain="[]" context="{'group_by': 'cylinder_state'}"/>
+                    <filter name="group_product" string="Gas Type" domain="[]" context="{'group_by': 'product_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window action: all cylinders (filtered to is_cylinder products) -->
+    <record id="up5_nsvn_cylinder_lot_action" model="ir.actions.act_window">
+        <field name="name">Cylinders</field>
+        <field name="res_model">stock.lot</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('up5_nsvn_cylinder_lot_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': False})]"/>
+        <field name="search_view_id" ref="up5_nsvn_cylinder_lot_search"/>
+        <field name="domain">[('product_id.is_cylinder', '=', True)]</field>
+        <field name="context">{'search_default_overdue': False}</field>
+    </record>
+
+    <!-- Window action: overdue cylinders only -->
+    <record id="up5_nsvn_cylinder_overdue_action" model="ir.actions.act_window">
+        <field name="name">Overdue Cylinders</field>
+        <field name="res_model">stock.lot</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('up5_nsvn_cylinder_lot_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': False})]"/>
+        <field name="search_view_id" ref="up5_nsvn_cylinder_lot_search"/>
+        <field name="domain">[('product_id.is_cylinder', '=', True), ('is_overdue', '=', True)]</field>
+    </record>
+</odoo>

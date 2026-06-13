@@ -29,5 +29,25 @@
     ],
     "verification": "./verify.sh account",
     "evidence": "commit 8aa75da87ea — 2026-06-13; ./verify.sh account: pre-flight ok, 0 failed tests"
+  },
+  {
+    "id": "up5-nsvn-cylinder",
+    "area": "nsvn-mvp",
+    "title": "NSVN MVP — Cylinder Lifecycle Tracking",
+    "behavior": "The up5_nsvn_cylinder module installs on Odoo 19; adds cylinder-specific fields to stock.lot (type, capacity, customer, dispatch date, rental period); computes overdue status and days-at-customer; shows a dedicated Cylinders list view under Inventory with overdue rows highlighted in red; ./verify.sh up5_nsvn_cylinder exits 0",
+    "state": "active",
+    "priority": "high",
+    "criteria": [
+      "product.template extended with is_cylinder (Boolean) and gas_type (Selection: O2-industrial, O2-medical, N2, Ar, CO2, H2, He, mixed, other)",
+      "stock.lot extended with cylinder_capacity, cylinder_pressure_rating, cylinder_manufacture_year, cylinder_next_inspection, cylinder_state (available/at_customer/filling/maintenance/retired), customer_id (Many2one res.partner), dispatch_date, rental_days (default 30)",
+      "Computed fields on stock.lot: expected_return_date, days_at_customer, is_overdue, overdue_days — all store=True with @api.depends",
+      "stock.lot form view extended with a Cylinder tab showing all cylinder fields",
+      "product.template form view extended with is_cylinder + gas_type fields",
+      "Cylinders menu item under Inventory with a list view filtered to is_cylinder=True; overdue rows decoration-danger",
+      "TransactionCase tests: overdue cylinder, not-overdue cylinder, no-customer cylinder (failure scenario), dispatch-without-customer no-overdue (failure scenario)",
+      "./verify.sh up5_nsvn_cylinder exits 0 — paste full output as evidence"
+    ],
+    "verification": "./verify.sh up5_nsvn_cylinder",
+    "evidence": ""
   }
 ]

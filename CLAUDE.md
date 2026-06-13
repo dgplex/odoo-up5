@@ -5,7 +5,7 @@
 **Company:** UP5 TECH — "We Build Software That Drives Your Business"
 **What:** `odoo-up5` is UP5 TECH's Odoo 19.0 platform for delivering custom ERP, CRM, and SaaS solutions to clients.
 **Custom scope:** Modules prefixed `up5_` are UP5 TECH-specific. All others are upstream Odoo — never patch them.
-- *(add `up5_*` modules here as they are created)*
+- `up5_nsvn_cylinder` — Nippon Sanso Vietnam: cylinder lifecycle tracking (dispatch, overdue detection, customer tracking)
 
 ---
 
