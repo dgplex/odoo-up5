@@ -18,6 +18,11 @@
     'demo': [
         'demo/demo_cylinders.xml',
     ],
+    'assets': {
+        'web.assets_tests': [
+            'up5_nsvn_cylinder/static/tests/tours/*.js',
+        ],
+    },
     'license': 'LGPL-3',
     'installable': True,
     'application': False,

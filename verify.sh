@@ -74,8 +74,12 @@ else
 fi
 
 echo "=== Layer 2 — Runtime Verification: $INSTALL_FLAG $MODULE (state: ${MODULE_STATE:-not_installed}) ==="
+# --test-tags /$MODULE        → only this module's tests (not dependencies)
+# ,-chrome_headless           → exclude tests that require a Chrome DevTools connection
+# Run Chrome tour separately: --test-tags /$MODULE/chrome_headless
 if ! conda run -n odoo19 python odoo-bin -c odoo.conf \
   --test-enable -d odoo_dev --stop-after-init "$INSTALL_FLAG" "$MODULE" \
+  --test-tags "/$MODULE,-chrome_headless" \
   --log-level=test; then
   echo ""
   echo "  FAIL: Odoo test runner exited non-zero."
