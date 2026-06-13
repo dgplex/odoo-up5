@@ -62,9 +62,20 @@ fi
 
 # ── Layer 2: Runtime Verification ─────────────────────────────────────────────
 
-echo "=== Layer 2 — Runtime Verification: -i $MODULE ==="
+# Use -u (update) when module is already installed; -i (install) for first-time.
+# -i on an already-installed module is a no-op: 0 tests run, which is a false positive.
+MODULE_STATE=$(PGPASSWORD=odoo psql -h localhost -U odoo -d odoo_dev -tAc \
+  "SELECT state FROM ir_module_module WHERE name = '$MODULE'" 2>/dev/null | tr -d '[:space:]')
+
+if [ "$MODULE_STATE" = "installed" ] || [ "$MODULE_STATE" = "toupgrade" ]; then
+  INSTALL_FLAG="-u"
+else
+  INSTALL_FLAG="-i"
+fi
+
+echo "=== Layer 2 — Runtime Verification: $INSTALL_FLAG $MODULE (state: ${MODULE_STATE:-not_installed}) ==="
 if ! conda run -n odoo19 python odoo-bin -c odoo.conf \
-  --test-enable -d odoo_dev --stop-after-init -i "$MODULE" \
+  --test-enable -d odoo_dev --stop-after-init "$INSTALL_FLAG" "$MODULE" \
   --log-level=test; then
   echo ""
   echo "  FAIL: Odoo test runner exited non-zero."

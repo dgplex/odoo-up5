@@ -16,7 +16,7 @@
   Layer 2 passed.
   === Layer 3 — System Confirmation (manual) ===  → PENDING browser smoke test
   ```
-- **Tests (7/7):**
+- **Tests (10/10):**
   - `test_overdue_cylinder` — 40-day dispatch, 30-day rental → overdue by 10 ✅
   - `test_not_overdue_cylinder` — 10-day dispatch, 30-day rental → not overdue ✅
   - `test_just_dispatched_not_overdue` — dispatched today → not overdue ✅
@@ -24,6 +24,10 @@
   - `test_dispatch_date_without_customer_no_overdue` — dispatch set, no customer → not overdue ✅
   - `test_gas_type_and_is_cylinder_on_product` — product template fields readable ✅
   - `test_rental_days_default_is_thirty` — default rental_days = 30 ✅
+  - `test_cylinder_action_loads` (HttpCase) — action in DB, res_model=stock.lot ✅
+  - `test_cylinder_fields_accessible_via_rpc` (HttpCase) — overdue fields over JSON-RPC ✅
+  - `test_product_gas_type_readable_via_rpc` (HttpCase) — gas_type/is_cylinder over RPC ✅
+- **verify.sh fix:** detect installed vs not-installed via psql and use `-u` vs `-i` accordingly (was a false "0 tests" on already-installed module)
 
 ## Next Steps
 
