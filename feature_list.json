@@ -35,7 +35,7 @@
     "area": "nsvn-mvp",
     "title": "NSVN MVP — Cylinder Lifecycle Tracking",
     "behavior": "The up5_nsvn_cylinder module installs on Odoo 19; adds cylinder-specific fields to stock.lot (type, capacity, customer, dispatch date, rental period); computes overdue status and days-at-customer; shows a dedicated Cylinders list view under Inventory with overdue rows highlighted in red; ./verify.sh up5_nsvn_cylinder exits 0",
-    "state": "active",
+    "state": "passing",
     "priority": "high",
     "criteria": [
       "product.template extended with is_cylinder (Boolean) and gas_type (Selection: O2-industrial, O2-medical, N2, Ar, CO2, H2, He, mixed, other)",
@@ -48,6 +48,6 @@
       "./verify.sh up5_nsvn_cylinder exits 0 — paste full output as evidence"
     ],
     "verification": "./verify.sh up5_nsvn_cylinder",
-    "evidence": ""
+    "evidence": "commit a84a2df5528 — 2026-06-13; ./verify.sh: Layer 1 ruff ok, Layer 2 10/10 tests pass (7 TransactionCase + 3 HttpCase); Layer 3 browser confirmed by user: Cylinders menu present, overdue rows red, Cylinder tab on stock.lot form, is_cylinder+gas_type on product form"
   }
 ]

@@ -2,19 +2,20 @@
 
 ## Current Verified State
 
-- **Branch:** `19.0-add-harness-engineering-cla`
+- **Branch:** `19.0-nsvn-cylinder-mvp`
 - **Last verified:** 2026-06-13
 - **Environment:** conda env `odoo19` (Python 3.12) + PostgreSQL 17 + `odoo_dev` database ✅
-- **Repo status:** `up5_nsvn_cylinder` module installed + Layers 1+2 passing — **Layer 3 pending**
+- **Repo status:** `up5_nsvn_cylinder` task CLOSED — all 3 layers passing ✅
+- **Task:** `up5-nsvn-cylinder` → state: `passing`, evidence: commit `a84a2df5528`
 - **Verification:**
   ```
   === Pre-flight ===        ✅
   === Layer 1 — Static Analysis ===   All checks passed!   ✅
   Layer 1 passed.
   === Layer 2 — Runtime Verification ===
-  0 failed, 0 error(s) of 7 tests   ✅
+  0 failed, 0 error(s) of 10 tests (7 TransactionCase + 3 HttpCase)   ✅
   Layer 2 passed.
-  === Layer 3 — System Confirmation (manual) ===  → PENDING browser smoke test
+  === Layer 3 — System Confirmation ===  ✅ CONFIRMED by user 2026-06-13
   ```
 - **Tests (10/10):**
   - `test_overdue_cylinder` — 40-day dispatch, 30-day rental → overdue by 10 ✅
@@ -27,14 +28,10 @@
   - `test_cylinder_action_loads` (HttpCase) — action in DB, res_model=stock.lot ✅
   - `test_cylinder_fields_accessible_via_rpc` (HttpCase) — overdue fields over JSON-RPC ✅
   - `test_product_gas_type_readable_via_rpc` (HttpCase) — gas_type/is_cylinder over RPC ✅
-- **verify.sh fix:** detect installed vs not-installed via psql and use `-u` vs `-i` accordingly (was a false "0 tests" on already-installed module)
 
 ## Next Steps
 
-1. Finish `up5_nsvn_cylinder` implementation — run `./verify.sh up5_nsvn_cylinder`, paste output as evidence
-2. Layer 3 smoke test: install module in browser, verify Cylinders menu and overdue highlighting
-3. Update `feature_list.json` state to `passing` with evidence
-4. Update CLAUDE.md Project Identity with `up5_nsvn_cylinder`
+No active tasks. All tasks in `feature_list.json` are `passing`. Next: add a new task to `feature_list.json` for the next NSVN MVP phase (e.g., cylinder delivery orders, rental billing, or customer portal).
 
 ## Blockers
 
@@ -75,11 +72,13 @@ The up5_nsvn_cylinder module installs on Odoo 19; adds cylinder-specific fields 
 - `cylinder_state` is manually set (not auto-computed from stock moves) for MVP simplicity
 - No `ir.model.access.csv` needed — only extending existing models, not creating new ones
 
-**Layer 3 smoke test result:** *(fill in after manual browser test)*
-- Server started: pending — run `conda run -n odoo19 python odoo-bin -c odoo.conf`
-- Module installed without error: ✅ (confirmed via `-i up5_nsvn_cylinder` install output)
-- Critical path to exercise: Inventory → Cylinders → All Cylinders; open a cylinder form, check Cylinder tab; verify overdue row shows red
-- Result: pending
+**Layer 3 smoke test result:** ✅ CONFIRMED by user 2026-06-13
+- Server started: ✅
+- Module installed without error: ✅
+- Inventory → Cylinders menu present in nav bar ✅
+- All Cylinders list loads, overdue rows highlighted red ✅
+- Open cylinder form → Cylinder tab present with all fields ✅
+- Open product form → Cylinder tab shows `is_cylinder` + `gas_type` ✅
 
 ---
 
